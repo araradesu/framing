@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=820">
+    <title>framing - web謎解きゲーム</title>
+    <link rel="stylesheet" href="style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@400;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <!-- ポリゴン背景 -->
+    <canvas id="bgCanvas"></canvas>
+
+    <!-- スタート画面 -->
+    <section id="start-screen" class="screen active">
+        <div class="start-content">
+            <h1 class="start-title"><img src="logo.png" alt="framing" class="start-logo"></h1>
+
+            <div class="start-text-block">
+                <p>Web謎解きゲーム「framing」にようこそ。<br>
+                    このサイトは、作者のAIコーディングのお遊びの結果生まれたサイトです。</p>
+                <p>特にこれといったコンセプトはありませんが、楽しんでいただければ幸いです。</p>
+            </div>
+
+            <div class="start-rule-block">
+                <h2>【RULE】</h2>
+                <p>連続して出題される５つの謎を解き明かしてください。<br>
+                    全ての謎に正解できればクリアです。</p>
+            </div>
+
+            <div class="start-instruction-block">
+                <h2>【HOW TO PLAY】</h2>
+                <img src="example.png" alt="操作説明" class="instruction-img">
+                <p>キーボード入力で解答を直接打ち込めます。<br>
+                行き詰まった時は右上の「HINT」ボタンを活用してください。</p>
+                <p class="hint-text">※ 詳しい操作方法はプレイ中にも確認できます。</p>
+            </div>
+
+            <button id="start-button" class="btn start-btn">GAME START</button>
+
+            <div class="credit">
+                製作：arara (X: <a href="https://x.com/amedesuu" target="_blank" rel="noopener">@amedesuu</a>)
+            </div>
+        </div>
+    </section>
+
+    <!-- スキャン時の全体暗転用オーバーレイ -->
+    <div id="scan-dark-overlay"></div>
+
+    <!-- ゲーム画面 -->
+    <section id="game-screen" class="screen">
+        <div class="content-wrapper">
+            <header>
+                <div class="logo-container">
+                    <img src="logo.png" alt="framing" id="main-logo">
+                </div>
+            </header>
+
+            <main>
+                <div class="tabs">
+                    <span class="tab-label">question</span>
+                    <button class="tab-btn active" data-q="A">A</button>
+                    <button class="tab-btn locked" data-q="B">B</button>
+                    <button class="tab-btn locked" data-q="C">C</button>
+                    <button class="tab-btn locked" data-q="D">D</button>
+                    <button class="tab-btn locked" data-q="E">E</button>
+                </div>
+
+                <div class="hint-ui">
+                    <div class="hint-buttons-row">
+                        <button id="how-to-play-btn" class="hint-btn secondary">HOW TO PLAY</button>
+                        <button id="hint-toggle-btn" class="hint-btn">HINT</button>
+                    </div>
+                    <div id="hint-levels" class="hint-levels">
+                        <button class="hint-level-btn" data-level="1">HINT 1</button>
+                        <button class="hint-level-btn" data-level="2">HINT 2</button>
+                        <button class="hint-level-btn" data-level="3">HINT 3</button>
+                    </div>
+                </div>
+
+                <div class="problem-container" id="problem-stack">
+                    <img src="QuestionA.png" alt="Question" id="problem-image" class="problem-base">
+                    <!-- ヒント用重ね合わせ画像 -->
+                    <img src="" alt="" id="hint-image-1" class="hint-overlay">
+                    <img src="" alt="" id="hint-image-2" class="hint-overlay">
+                    <img src="" alt="" id="hint-image-3" class="hint-overlay">
+                </div>
+
+                <div class="answer-section">
+                    <!-- 「YOUR ANSWER」 かなり字間を空ける -->
+                    <div class="answer-label">
+                        <span class="l-space">Y</span>
+                        <span class="l-space">O</span>
+                        <span class="l-space">U</span>
+                        <span class="l-space target-r">R</span>
+                        <span class="l-space target-a">A</span>
+                        <span class="l-space">N</span>
+                        <span class="l-space">S</span>
+                        <span class="l-space">W</span>
+                        <span class="l-space">E</span>
+                        <span>R</span>
+                    </div>
+
+                    <div class="input-wrapper">
+                        <!-- カメラのトンボ（四隅のマーク） -->
+                        <div class="bracket top-left"></div>
+                        <div class="bracket top-right"></div>
+                        <div class="bracket bottom-left"></div>
+                        <div class="bracket bottom-right"></div>
+
+                        <div class="input-container" id="input-container">
+                            <input type="text" maxlength="1" class="char-input" data-index="0" autocomplete="off">
+                            <input type="text" maxlength="1" class="char-input" data-index="1" autocomplete="off">
+                            <input type="text" maxlength="1" class="char-input" data-index="2" autocomplete="off">
+                            <input type="text" maxlength="1" class="char-input" data-index="3" autocomplete="off">
+                            <!-- 判定演出用のマーク -->
+                            <div id="judge-mark"></div>
+                        </div>
+
+                        <!-- スキャンバー（解答欄エリアのみ） -->
+                        <div id="scan-bar"></div>
+                    </div>
+
+                    <div class="submit-container">
+                        <button id="submit-btn" class="btn submit-btn" disabled>Submit</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </section>
+
+    <!-- クリア画面 -->
+    <section id="clear-screen" class="screen">
+        <div class="clear-content">
+            <h1 class="clear-title">CONGRATULATIONS!</h1>
+            
+            <div class="clear-message-block">
+                <p>おめでとうございます。<br>
+                見事、全ての問題を解き明かすことが出来ました。</p>
+            </div>
+
+            <div class="clear-explanation-box">
+                <details class="explanation-details">
+                    <summary class="explanation-summary">＜問題Eの解説＞</summary>
+                    <div class="explanation-content">
+                        <p>今までの問題の正解を入れて、矢印が通る文字を読むと「PIXEL」となる。</p>
+                        <p>しかし、解答欄には４文字までしか入力することが出来なかった。</p>
+                        
+                        <div class="logic-box">
+                            <p>そこで、</p>
+                            <ul>
+                                <li>正誤判定は、入力した文字列ではなく、「解答欄自体をスキャンしている」こと</li>
+                                <li>不正解の時、「×」の記号が解答欄中央に表示されること</li>
+                            </ul>
+                            <p>これを利用する。</p>
+                        </div>
+
+                        <p>「PIEL」と入力して解答を提出し、わざと不正解の判定をもらい、<br>
+                        「×」をアルファベットの「X」と見立てて、<br>
+                        「×」が消える前にもう一度解答を提出することで、<br>
+                        「PIXEL」と解答することが出来た。</p>
+                        
+                        <img src="final_answer.png" alt="final answer" class="explanation-img">
+                    </div>
+                </details>
+            </div>
+
+            <button id="restart-button" class="btn clear-btn">BACK TO TITLE</button>
+
+            <div class="credit">
+                製作：arara (X: <a href="https://x.com/amedesuu" target="_blank" rel="noopener">@amedesuu</a>)
+            </div>
+        </div>
+    </section>
+
+    <!-- 操作説明モーダル -->
+    <div id="how-to-play-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="modal-close-btn" class="modal-close">&times;</button>
+            <div class="modal-body">
+                <h2>【HOW TO PLAY】</h2>
+                <img src="example.png" alt="操作説明" class="modal-img">
+                <div class="modal-text">
+                    <p>● キーボード入力で解答を直接打ち込めます。</p>
+                    <p>● Backspaceキーで入力済みの文字を消去できます。</p>
+                    <p>● 行き詰まった時は「HINT」ボタンを活用してください。</p>
+                    <p>● 問題タブを切り替えても現在の入力状態は保持されます。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+
+</html>

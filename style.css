@@ -1,0 +1,891 @@
+:root {
+    --bg-color: #f0f0f0;
+    --text-color: #333;
+    --primary-color: #f07e3a;
+    --unlocked-tab: #333;
+    --locked-tab: #888;
+    --transition-speed: 0.8s; /* ゆったりめのトランジション */
+    --font-main: 'Noto Sans JP', sans-serif;
+    --font-en: 'Orbitron', calc(12px + 0.5vw), sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+body {
+    background-color: var(--bg-color);
+    font-family: var(--font-main);
+    color: var(--text-color);
+    overflow-x: hidden;
+    position: relative;
+    min-height: 100vh;
+}
+
+/* 停止クラス: CSSアニメーションを止める対象を限定 */
+body.scanning .shake,
+body.scanning #judge-mark {
+    animation-play-state: paused !important;
+}
+
+/* ポリゴン背景 */
+#bgCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+/* スキャン時の全体暗転用 */
+#scan-dark-overlay {
+    display: none;
+    /* スポットライトを使うため古い全体オーバーレイは無効化 */
+}
+
+/* 画面共通 */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    min-height: 100vh;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-speed) ease-in-out, visibility 0s linear var(--transition-speed);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 0;
+}
+
+.screen.active {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity var(--transition-speed) ease-in-out, visibility 0s linear 0s;
+    z-index: 10;
+}
+
+/* ボタン汎用 */
+.btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 30px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: transform 0.1s, background-color 0.2s;
+    font-family: var(--font-en);
+    margin-top: 20px;
+}
+
+.btn:active {
+    transform: scale(0.95);
+}
+
+.btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* スタート・クリア画面 */
+#start-screen {
+    justify-content: center;
+    align-items: center;
+}
+
+.start-content {
+    max-width: 650px;
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.start-logo {
+    max-width: 450px;
+    width: 100%;
+    margin-bottom: 3rem;
+}
+
+.start-text-block {
+    font-size: 1.05rem;
+    color: #444;
+    line-height: 1.8;
+    margin-bottom: 2.5rem;
+    letter-spacing: 0.5px;
+}
+
+.start-text-block p {
+    margin-bottom: 0.8rem;
+}
+
+.start-rule-block,
+.start-instruction-block {
+    background: rgba(240, 126, 58, 0.05); /* うっすらオレンジ */
+    border: 1px solid rgba(240, 126, 58, 0.2);
+    border-radius: 8px;
+    padding: 2rem;
+    width: 100%;
+    margin-bottom: 2rem;
+}
+
+.start-instruction-block h2 {
+    font-family: var(--font-en);
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    letter-spacing: 2px;
+    margin-bottom: 1.2rem;
+}
+
+.instruction-img {
+    max-width: 100%;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.start-rule-block h2 {
+    font-family: var(--font-en);
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    letter-spacing: 2px;
+    margin-bottom: 1.2rem;
+}
+
+.start-rule-block p,
+.start-instruction-block p {
+    font-size: 1rem;
+    color: #555;
+    line-height: 1.7;
+    margin-bottom: 1rem;
+}
+
+.start-rule-block .hint-text,
+.start-instruction-block .hint-text {
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 0;
+}
+
+.start-btn {
+    font-size: 1.3rem;
+    padding: 15px 50px;
+    box-shadow: 0 4px 10px rgba(240, 126, 58, 0.3);
+    letter-spacing: 1px;
+}
+
+#clear-screen {
+    justify-content: center;
+    align-items: center;
+    padding: 60px 20px;
+}
+
+.clear-title {
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--primary-color);
+    margin-bottom: 2rem;
+    letter-spacing: 4px;
+    text-shadow: 2px 2px 10px rgba(240, 126, 58, 0.2);
+    font-family: var(--font-en);
+}
+
+.clear-message-block {
+    font-size: 1.2rem;
+    color: #444;
+    line-height: 1.8;
+    margin-bottom: 3rem;
+    text-align: center;
+}
+
+/* 解説アコーディオン */
+.clear-explanation-box {
+    margin-bottom: 3rem;
+    text-align: left;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.explanation-details {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.explanation-summary {
+    padding: 15px 20px;
+    font-weight: bold;
+    cursor: pointer;
+    background: #fdfdfd;
+    color: var(--primary-color);
+    list-style: none;
+    transition: background 0.2s;
+}
+
+.explanation-summary:hover {
+    background: #fff5ef;
+}
+
+.explanation-summary::-webkit-details-marker {
+    display: none;
+}
+
+.explanation-content {
+    padding: 24px;
+    border-top: 1px solid #eee;
+    font-size: 1rem;
+    color: #555;
+    line-height: 1.8;
+}
+
+.explanation-content p {
+    margin-bottom: 15px;
+}
+
+.logic-box {
+    background: #f9f9f9;
+    padding: 18px;
+    border-left: 4px solid var(--primary-color);
+    margin: 20px 0;
+    border-radius: 0 8px 8px 0;
+}
+
+.logic-box ul {
+    margin: 10px 0 10px 20px;
+}
+
+.explanation-img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin-top: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.clear-btn {
+    padding: 15px 40px;
+    font-size: 1.1rem;
+}
+
+/* クレジット表記 */
+.credit {
+    margin-top: 4rem;
+    font-size: 0.85rem;
+    color: #999;
+    text-align: center;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 2rem;
+    width: 100%;
+}
+
+.credit a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s, text-decoration 0.2s;
+}
+
+.credit a:hover {
+    color: #f9a36f;
+    text-decoration: underline;
+}
+
+/* ゲーム画面 (全て中央揃えに戻す) */
+.content-wrapper {
+    width: 100%;
+    max-width: 800px;
+    min-width: 800px;
+    /* 画面サイズによらずレイアウトを固定 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* 中央揃え */
+    position: relative;
+    z-index: 5;
+    margin: 0 auto;
+}
+
+/* ヘッダー・ロゴ */
+header {
+    margin-bottom: 2rem;
+}
+
+#main-logo {
+    max-width: 350px;
+    transform: translateX(1px);
+    /* ほんの少し左にずらす */
+    transition: opacity 0.5s ease-in-out;
+}
+
+/* ロゴの点滅演出 */
+@keyframes logo-pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
+.logo-pulse {
+    animation: logo-pulse 2s infinite ease-in-out;
+}
+
+/* タブ */
+.tabs {
+    display: flex;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #ccc;
+    padding-bottom: 0;
+    width: 100%;
+    height: 75px;
+    /* 高さを固定し、タブ切り替え時のガタつきを防止 */
+    justify-content: center;
+    gap: 8px;
+    /* 全体的に幅広にするため */
+}
+
+.tab-label {
+    font-family: var(--font-en);
+    margin-right: 25px;
+    color: #444;
+    font-size: 1.2rem;
+    font-weight: 900;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    background: linear-gradient(45deg, #333, #888);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    padding-bottom: 5px;
+    position: relative;
+}
+
+.tab-btn {
+    background-color: var(--unlocked-tab);
+    color: white;
+    border: none;
+    border-radius: 5px 5px 0 0;
+    width: 95px;
+    /* 各タブの横幅をでかく */
+    height: 50px;
+    margin: 0;
+    margin-bottom: 0;
+    font-size: 1.4rem;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: var(--font-en);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: bottom;
+}
+
+.tab-btn:hover:not(.locked):not(.active) {
+    background-color: #555;
+    height: 53px;
+}
+
+.tab-btn.active {
+    height: 60px;
+    width: 110px;
+    /* 選択中はさらに大きく */
+    margin: 0;
+    /* ネガティブマージンを解除して隣のタブをしっかり押し退ける */
+    /* 1色ではなく、さりげなく綺麗なグラデーション */
+    background: linear-gradient(135deg, var(--primary-color), #f9a36f);
+    color: white;
+    z-index: 5;
+}
+
+.tab-btn.locked {
+    background-color: var(--locked-tab);
+    color: white;
+    opacity: 0.6;
+}
+
+/* ヒントUI */
+.hint-ui {
+    width: 100%;
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* 右寄せ */
+    gap: 12px;
+}
+
+.hint-buttons-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.hint-btn {
+    background: #444;
+    color: white;
+    border: none;
+    padding: 6px 15px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    font-family: var(--font-en);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.hint-btn:hover {
+    background: #666;
+}
+
+.hint-btn.active {
+    background: var(--primary-color);
+}
+
+.hint-btn.secondary {
+    background: #777;
+    font-size: 0.8rem;
+    padding: 5px 12px;
+}
+
+.hint-btn.secondary:hover {
+    background: #999;
+}
+
+.hint-ui-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.hint-levels {
+    display: flex;
+    gap: 10px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out, margin 0.3s;
+    margin-top: 0;
+}
+
+.hint-levels.show {
+    max-height: 50px;
+    margin-top: 5px;
+}
+
+.hint-level-btn {
+    background: white;
+    color: #444;
+    border: 2px solid #ddd;
+    padding: 4px 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    font-family: var(--font-en);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.hint-level-btn:hover {
+    background: #f9f9f9;
+}
+
+/* 選択中のヒント（グラデーション枠） */
+.hint-level-btn.selected {
+    border: 2px solid transparent;
+    background-image: linear-gradient(white, white), linear-gradient(135deg, var(--primary-color), #f9a36f);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    box-shadow: 0 0 8px rgba(240, 126, 58, 0.3);
+}
+
+/* 問題画像（スタック対応） */
+.problem-container {
+    width: 100%;
+    min-height: 250px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 2rem;
+    position: relative; /* 重ね合わせの基準 */
+}
+
+#problem-image,
+.hint-overlay {
+    max-width: 100%;
+    max-height: 480px;
+    object-fit: contain;
+    transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
+}
+
+.hint-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    pointer-events: none; /* 下の画像や入力を邪魔しない */
+}
+
+.hint-overlay.show {
+    opacity: 1;
+}
+
+/* スライド演出用クラス */
+.slide-out-left {
+    transform: translateX(-40px);
+    opacity: 0;
+}
+
+.slide-out-right {
+    transform: translateX(40px);
+    opacity: 0;
+}
+
+.slide-in-from-right {
+    transform: translateX(40px);
+    opacity: 0;
+    transition: none !important;
+}
+
+.slide-in-from-left {
+    transform: translateX(-40px);
+    opacity: 0;
+    transition: none !important;
+}
+
+/* 解答セクション */
+.answer-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* 中央揃え */
+}
+
+.answer-label {
+    font-family: var(--font-en);
+    color: #888;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    /* 少し大きく */
+    text-transform: uppercase;
+    display: flex;
+}
+
+.l-space {
+    margin-right: 37px;
+    /* 間隔を狭める */
+}
+
+.target-r {
+    margin-right: 50px;
+    /* 間隔を狭める */
+}
+
+.input-wrapper {
+    position: relative;
+    padding: 15px 20px;
+    z-index: 60;
+    background: transparent;
+    border-radius: 15px;
+    /* スポットライトの形としてほんのり角丸に */
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0);
+    /* 透明な巨大な影を準備 */
+    transition: box-shadow 0.2s ease-in-out;
+    /* スキャン時にフェードインさせる */
+}
+
+/* スキャン時はトンボの中だけ白く保ち明るくするスポットライト演出！ */
+body.scanning .input-wrapper {
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
+    /* 全体を暗くし、中だけ明るく！ */
+}
+
+/* カメラのトンボ (四隅) */
+.bracket {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    border-color: #888;
+    border-style: solid;
+}
+
+.top-left {
+    top: 0;
+    left: 0;
+    border-width: 3px 0 0 3px;
+}
+
+.top-right {
+    top: 0;
+    right: 0;
+    border-width: 3px 3px 0 0;
+}
+
+.bottom-left {
+    bottom: 0;
+    left: 0;
+    border-width: 0 0 3px 3px;
+}
+
+.bottom-right {
+    bottom: 0;
+    right: 0;
+    border-width: 0 3px 3px 0;
+}
+
+.input-container {
+    display: flex;
+    gap: 20px;
+    /* 間隔をちょっと狭く */
+    position: relative;
+}
+
+.char-input {
+    width: 65px;
+    /* 全体的に大きめに */
+    height: 65px;
+    font-size: 2.2rem;
+    text-align: center;
+    font-family: var(--font-en);
+    font-weight: bold;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    text-transform: uppercase;
+    background: white;
+    color: #333;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.char-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 5px rgba(240, 126, 58, 0.5);
+}
+
+.char-input:disabled {
+    background-color: #eaeaea;
+    color: #666;
+    border-color: #bbb;
+    cursor: default;
+}
+
+.char-input.incorrect-text {
+    color: rgba(255, 0, 0, 0.8) !important;
+}
+
+/* 正解済み時の色変更 */
+.char-input.solved {
+    background-color: rgba(0, 200, 0, 0.1);
+    color: #0b800b;
+    border-color: #0b800b;
+}
+
+/* 判定マーク（〇・×） */
+#judge-mark {
+    position: absolute;
+    top: 45%; /* 少し上に上げる（元は50%） */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 4rem; /* ちょっと小さくする（元は5rem） */
+    font-weight: bold;
+    font-family: sans-serif;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 70;
+}
+
+#judge-mark.correct {
+    color: rgba(0, 200, 0, 0.8);
+    opacity: 1;
+}
+
+#judge-mark.incorrect {
+    color: rgba(255, 0, 0, 0.8);
+    opacity: 1;
+}
+
+#judge-mark.pixel-correct {
+    /* ベースは×のスタイルを引き継ぐが、上に大きな〇を描画 */
+    color: rgba(255, 0, 0, 0.8);
+    opacity: 1;
+}
+
+#judge-mark.pixel-correct::after {
+    content: '〇';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1.6);
+    color: rgba(0, 200, 0, 0.9);
+}
+
+/* 不正解の揺れアニメーション */
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    20% {
+        transform: translateX(-10px);
+    }
+
+    40% {
+        transform: translateX(10px);
+    }
+
+    60% {
+        transform: translateX(-10px);
+    }
+
+    80% {
+        transform: translateX(10px);
+    }
+}
+
+.shake {
+    animation: shake 0.4s ease-in-out;
+}
+
+/* スキャン演出: 文字列部分(入力欄)だけをスキャンするバー */
+#scan-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 6px;
+    height: 100%;
+    background: rgba(0, 255, 255, 0.8);
+    box-shadow: 0 0 15px 2px cyan;
+    z-index: 101;
+    pointer-events: none;
+    display: none;
+}
+
+@keyframes scan-animation {
+    0% {
+        left: 0;
+    }
+
+    100% {
+        left: 100%;
+    }
+}
+
+.scan-active {
+    display: block !important;
+    animation: scan-animation 1.5s linear forwards;
+}
+
+/* Utilities */
+.fade-out {
+    opacity: 0 !important;
+}
+
+/* 提出ボタン位置 */
+.submit-container {
+    margin-top: 10px;
+}
+
+/* モーダル関連 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background: white;
+    width: 90%;
+    max-width: 550px;
+    border-radius: 12px;
+    position: relative;
+    padding: 30px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.show .modal-content {
+    transform: translateY(0);
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    cursor: pointer;
+    color: #444;
+    line-height: 1;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    transition: background 0.2s, color 0.2s;
+}
+
+.modal-close:hover {
+    background: #f0f0f0;
+    color: var(--primary-color);
+}
+
+.modal-body {
+    text-align: center;
+}
+
+.modal-body h2 {
+    font-family: var(--font-en);
+    font-size: 1.4rem;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+}
+
+.modal-img {
+    max-width: 100%;
+    max-height: 250px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border: 1px solid #eee;
+}
+
+.modal-text {
+    text-align: left;
+    color: #444;
+    font-size: 0.95rem;
+    line-height: 1.8;
+}
+
+.modal-text p {
+    margin-bottom: 8px;
+    display: flex;
+    gap: 8px;
+}
