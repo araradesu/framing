@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (input.value.length === 1 && index < inputs.length - 1) {
                 setTimeout(() => {
                     inputs[index + 1].focus();
-                }, 10);
+                }, 50); // 10msから50msに延長して、モバイルでの入力重複を防止
             }
             checkSubmitStatus();
         });
@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     inputs[0].value = e.key.toUpperCase();
                     updateDisplay(inputs[0]);
-                    inputs[1].focus();
+                    inputs[0].focus(); // 1つ先ではなく、入力した本人にフォーカス（重複防止）
                 }
                 checkSubmitStatus();
                 return;
@@ -261,16 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     inputs.forEach(i => i.classList.remove('incorrect-text'));
                     emptyInput.value = e.key.toUpperCase();
                     updateDisplay(emptyInput);
-                    const nextIndex = parseInt(emptyInput.dataset.index) + 1;
-                    if (nextIndex < 4) {
-                        setTimeout(() => {
-                            inputs[nextIndex].focus();
-                        }, 10);
-                    } else {
-                        setTimeout(() => {
-                            emptyInput.focus();
-                        }, 10);
-                    }
+                    emptyInput.focus(); // 1つ先ではなく、入力した本人にフォーカス（重複防止）
                     checkSubmitStatus();
                 }
             }
