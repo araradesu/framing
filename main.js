@@ -242,7 +242,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     inputs[0].value = e.key.toUpperCase();
                     updateDisplay(inputs[0]);
-                    inputs[0].focus(); // 1つ先ではなく、入力した本人にフォーカス（重複防止）
+                    
+                    // 1つ先へフォーカス移動（PCでの利便性向上のため修正）
+                    setTimeout(() => {
+                        inputs[1].focus();
+                    }, 50);
                 }
                 checkSubmitStatus();
                 return;
@@ -261,7 +265,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     inputs.forEach(i => i.classList.remove('incorrect-text'));
                     emptyInput.value = e.key.toUpperCase();
                     updateDisplay(emptyInput);
-                    emptyInput.focus(); // 1つ先ではなく、入力した本人にフォーカス（重複防止）
+
+                    // 次のボックスへフォーカスを移す（PCでの利便性向上のため修正）
+                    const nextIndex = inputs.indexOf(emptyInput) + 1;
+                    setTimeout(() => {
+                        if (nextIndex < inputs.length) {
+                            inputs[nextIndex].focus();
+                        } else {
+                            emptyInput.focus();
+                        }
+                    }, 50);
                     checkSubmitStatus();
                 }
             }
