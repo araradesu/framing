@@ -1,4 +1,32 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- 画像プリロード ---
+    function preloadImages() {
+        const questions = ['A', 'B', 'C', 'D', 'E'];
+        const commonAssets = ['logo.png', 'example.png', 'Final_Answer.png', 'D3.png'];
+        
+        const assetsToPreload = [];
+        
+        // 問題画像
+        questions.forEach(q => assetsToPreload.push(`Question${q}.png`));
+        
+        // ヒント画像 (A1.png 〜 E3.png)
+        questions.forEach(q => {
+            for (let i = 1; i <= 3; i++) {
+                assetsToPreload.push(`${q}${i}.png`);
+            }
+        });
+        
+        // 共通アセット
+        assetsToPreload.push(...commonAssets);
+
+        assetsToPreload.forEach(src => {
+            const img = new Image();
+            img.src = src;
+        });
+        console.log(`Preloading ${assetsToPreload.length} assets...`);
+    }
+    preloadImages();
+
     // --- キャンバス背景（ポリゴン） ---
     const canvas = document.getElementById('bgCanvas');
     const ctx = canvas.getContext('2d');
