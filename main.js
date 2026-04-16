@@ -114,6 +114,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputContainer = document.getElementById('input-container');
     const mainLogo = document.getElementById('main-logo');
 
+    // Display sync helper
+    function updateDisplay(input) {
+        const display = input.nextElementSibling;
+        if (display && display.classList.contains('char-display')) {
+            display.textContent = input.value;
+        }
+    }
+
     // Hint elements
     const hintToggleBtn = document.getElementById('hint-toggle-btn');
     const hintLevelsContainer = document.getElementById('hint-levels');
@@ -123,6 +131,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('hint-image-2'),
         document.getElementById('hint-image-3')
     ];
+
+    // 初期状態の表示同期
+    inputs.forEach(updateDisplay);
 
     // Modal elements
     const howToPlayBtn = document.getElementById('how-to-play-btn');
@@ -147,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
     inputs.forEach((input, index) => {
         input.addEventListener('input', (e) => {
             input.value = input.value.toUpperCase().replace(/[^A-Z]/g, '');
+            updateDisplay(input); // 表示を更新
             inputs.forEach(i => i.classList.remove('incorrect-text')); // 打ったら赤文字解除
 
             if (input.value.length === 1 && index < inputs.length - 1) {
@@ -217,14 +229,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     const filledInput = reversedInputs.find(i => i.value !== '');
                     if (filledInput) {
                         filledInput.value = '';
+                        updateDisplay(filledInput);
                         filledInput.focus();
                     } else {
                         inputs[0].focus();
                     }
                 } else {
                     // なにかキーを入力→全て消して１文字目を入力
-                    inputs.forEach(i => i.value = '');
+                    inputs.forEach(i => {
+                        i.value = '';
+                        updateDisplay(i);
+                    });
                     inputs[0].value = e.key.toUpperCase();
+                    updateDisplay(inputs[0]);
                     inputs[1].focus();
                 }
                 checkSubmitStatus();
@@ -243,6 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     e.preventDefault();
                     inputs.forEach(i => i.classList.remove('incorrect-text'));
                     emptyInput.value = e.key.toUpperCase();
+                    updateDisplay(emptyInput);
                     const nextIndex = parseInt(emptyInput.dataset.index) + 1;
                     if (nextIndex < 4) {
                         setTimeout(() => {
@@ -265,6 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     e.preventDefault();
                     inputs.forEach(i => i.classList.remove('incorrect-text'));
                     filledInput.value = '';
+                    updateDisplay(filledInput);
                     filledInput.focus();
                     checkSubmitStatus();
                 }
@@ -471,6 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // すでに解かれている問題
             inputs.forEach((input, idx) => {
                 input.value = answers[q][idx];
+                updateDisplay(input);
                 input.disabled = true;
                 input.classList.add('solved');
                 input.classList.remove('incorrect-text');
@@ -485,6 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // まだ解かれていない問題
             inputs.forEach((input, idx) => {
                 input.value = userInputs[q][idx];
+                updateDisplay(input);
                 input.disabled = false;
                 input.classList.remove('solved');
                 input.classList.remove('incorrect-text');

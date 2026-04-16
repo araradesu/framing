@@ -647,44 +647,77 @@ body.scanning .input-wrapper {
     position: relative;
 }
 
-.char-input {
+.char-box {
+    position: relative;
     width: 65px;
-    /* 全体的に大きめに */
     height: 65px;
-    font-size: 2.2rem;
-    text-align: center;
-    font-family: var(--font-en);
-    font-weight: bold;
+    background: white;
     border: 2px solid #ccc;
     border-radius: 5px;
-    text-transform: uppercase;
-    background: white;
-    color: #333;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.char-input:focus {
-    outline: none;
+.char-box:focus-within {
     border-color: var(--primary-color);
     box-shadow: 0 0 5px rgba(240, 126, 58, 0.5);
 }
 
-.char-input:disabled {
-    background-color: #eaeaea;
-    color: #666;
-    border-color: #bbb;
-    cursor: default;
+/* 解答済みコンテナの状態 */
+.char-box:has(.char-input.solved) {
+    background-color: rgba(0, 200, 0, 0.1);
+    border-color: #0b800b;
 }
 
-.char-input.incorrect-text {
+.char-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0; /* 本物の入力欄を隠す */
+    z-index: 2;
+    cursor: text;
+    border: none;
+    background: transparent;
+    outline: none;
+    caret-color: transparent; /* カーソルも隠す */
+}
+
+.char-display {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2.2rem;
+    font-family: var(--font-en);
+    font-weight: bold;
+    color: #333;
+    z-index: 1;
+    pointer-events: none;
+    text-transform: uppercase;
+}
+
+.char-input.incorrect-text + .char-display {
     color: rgba(255, 0, 0, 0.8) !important;
 }
 
 /* 正解済み時の色変更 */
-.char-input.solved {
-    background-color: rgba(0, 200, 0, 0.1);
+.char-input.solved + .char-display {
     color: #0b800b;
-    border-color: #0b800b;
+}
+
+/* 非活性（disabled）時の色変更 */
+.char-box:has(.char-input:disabled) {
+    background-color: #eaeaea;
+    border-color: #bbb;
+}
+
+.char-input:disabled + .char-display {
+    color: #666;
 }
 
 /* 判定マーク（〇・×） */
