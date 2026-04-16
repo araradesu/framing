@@ -684,11 +684,7 @@ body.scanning .input-wrapper {
     box-shadow: 0 0 5px rgba(240, 126, 58, 0.5);
 }
 
-/* 解答済みコンテナの状態 */
-.char-box:has(.char-input.solved) {
-    background-color: rgba(0, 200, 0, 0.1);
-    border-color: #0b800b;
-}
+
 
 .char-input {
     position: absolute;
@@ -727,10 +723,7 @@ body.scanning .input-wrapper {
     color: rgba(255, 0, 0, 0.8) !important;
 }
 
-/* 正解済み時の色変更 */
-.char-input.solved + .char-display {
-    color: #0b800b;
-}
+
 
 /* 非活性（disabled）時の色変更 */
 .char-box:has(.char-input:disabled) {
@@ -740,6 +733,16 @@ body.scanning .input-wrapper {
 
 .char-input:disabled + .char-display {
     color: #666;
+}
+
+/* 正解済み時の表示（disabledを上書きするように後に記述） */
+.char-box:has(.char-input.solved) {
+    background-color: rgba(0, 200, 0, 0.1) !important;
+    border-color: #0b800b !important;
+}
+
+.char-input.solved + .char-display {
+    color: #0b800b !important;
 }
 
 /* 判定マーク（〇・×） */
