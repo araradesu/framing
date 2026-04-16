@@ -150,7 +150,9 @@ document.addEventListener('DOMContentLoaded', () => {
             inputs.forEach(i => i.classList.remove('incorrect-text')); // 打ったら赤文字解除
 
             if (input.value.length === 1 && index < inputs.length - 1) {
-                inputs[index + 1].focus();
+                setTimeout(() => {
+                    inputs[index + 1].focus();
+                }, 10);
             }
             checkSubmitStatus();
         });
@@ -243,9 +245,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     emptyInput.value = e.key.toUpperCase();
                     const nextIndex = parseInt(emptyInput.dataset.index) + 1;
                     if (nextIndex < 4) {
-                        inputs[nextIndex].focus();
+                        setTimeout(() => {
+                            inputs[nextIndex].focus();
+                        }, 10);
                     } else {
-                        emptyInput.focus();
+                        setTimeout(() => {
+                            emptyInput.focus();
+                        }, 10);
                     }
                     checkSubmitStatus();
                 }
