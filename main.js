@@ -243,10 +243,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     inputs[0].value = e.key.toUpperCase();
                     updateDisplay(inputs[0]);
                     
-                    // 1つ先へフォーカス移動（PCでの利便性向上のため修正）
-                    setTimeout(() => {
-                        inputs[1].focus();
-                    }, 50);
+                    // 1つ先へフォーカス移動（PCでの素早い入力を受け付けるため同期的に実行）
+                    inputs[1].focus();
                 }
                 checkSubmitStatus();
                 return;
@@ -266,15 +264,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     emptyInput.value = e.key.toUpperCase();
                     updateDisplay(emptyInput);
 
-                    // 次のボックスへフォーカスを移す（PCでの利便性向上のため修正）
+                    // 次のボックスへフォーカスを移す（PCでの素早い入力を受け付けるため同期的に実行）
                     const nextIndex = inputs.indexOf(emptyInput) + 1;
-                    setTimeout(() => {
-                        if (nextIndex < inputs.length) {
-                            inputs[nextIndex].focus();
-                        } else {
-                            emptyInput.focus();
-                        }
-                    }, 50);
+                    if (nextIndex < inputs.length) {
+                        inputs[nextIndex].focus();
+                    } else {
+                        emptyInput.focus();
+                    }
                     checkSubmitStatus();
                 }
             }
@@ -520,8 +516,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             isXVisible = false;
             checkSubmitStatus();
-            
-            // 自動フォーカスを削除
+
+            // 自動フォーカス（PCのみ、アニメーション終了頃）
+            if (!('ontouchstart' in window)) {
+                setTimeout(() => {
+                    if (currentQuestion === q) { // まだ同じ問題にいる場合のみ
+                        const emptyInput = inputs.find(i => i.value === '');
+                        if (emptyInput) emptyInput.focus();
+                    }
+                }, 250);
+            }
         }
     }
 
